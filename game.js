@@ -1,128 +1,10 @@
-const crypto = require("crypto");
-const readline = require("readline");
+import { createInterface } from "readline";
 
-class Table {
-  constructor(arr) {
-    this.arr = arr;
-  }
+import Rules from "./rules.js";
+import TableP from "./table.js";
+import GenerateKey from "./generateKey.js";
 
-  drawTable() {
-    const tableTemplate = this.arr.map(() => Array(this.arr.length).fill());
-
-    tableTemplate.forEach((row, rowIndex) => {
-      const { win, lose } = new Rules(this.arr).calculateWinLoseMoves(
-        this.arr,
-        this.arr[rowIndex]
-      );
-
-      row.forEach((_cell, cellIndex) => {
-        if (win.includes(this.arr[cellIndex])) {
-          tableTemplate[rowIndex][cellIndex] = "Win";
-        } else if (lose.includes(this.arr[cellIndex])) {
-          tableTemplate[rowIndex][cellIndex] = "Lose";
-        } else {
-          tableTemplate[rowIndex][cellIndex] = "Draft";
-        }
-      });
-    });
-
-    const columnNames = [...this.arr];
-
-    const tableDataWithColNames = tableTemplate.map((row, secondIndex) => {
-      const rowData = {
-        "User \u2B07 vs. PC \u27A1": columnNames[secondIndex],
-      };
-
-      columnNames.forEach((columnName, index) => {
-        rowData[columnName] = row[index];
-      });
-
-      return rowData;
-    });
-
-    console.table(tableDataWithColNames);
-  }
-}
-
-class Rules {
-  constructor(moves) {
-    if (moves.length < 3 || moves.length % 2 !== 1) {
-      throw new Error(
-        "Invalid number of moves. Please provide an odd number greater than or equal to 3. \nExample: node game.js Rock Scissors Paper\n"
-      );
-    }
-
-    this.moves = moves;
-  }
-
-  play(userMove, computerMove) {
-    console.log(`Your move: ${userMove}`);
-    console.log(`Computer's move: ${computerMove}`);
-
-    if (this.moves.indexOf(userMove) === -1) {
-      throw new Error("Invalid move. Please enter a valid move.");
-    }
-
-    const loseWinPositions = this.calculateWinLoseMoves(this.moves, userMove);
-
-    if (loseWinPositions.win.includes(computerMove)) {
-      console.log("You win!");
-    } else if (loseWinPositions.lose.includes(computerMove)) {
-      console.log("You lose!");
-    } else {
-      console.log("It's a tie!");
-    }
-  }
-
-  getRandomMove() {
-    const randomIndex = Math.floor(Math.random() * this.moves.length);
-    return this.moves[randomIndex];
-  }
-
-  calculateWinLoseMoves(arr, selectedElement) {
-    const selectedIndex = arr.indexOf(selectedElement);
-
-    if (selectedIndex === -1) {
-      console.log("Selected element is not found in the array.");
-      return;
-    }
-
-    const firstHalf = arr
-      .slice(selectedIndex + 1)
-      .concat(arr.slice(0, selectedIndex));
-
-    return {
-      lose: firstHalf,
-      win: firstHalf.splice(0, Math.floor(arr.length / 2)),
-    };
-  }
-}
-
-class GenerateKey {
-  constructor(keyLength, algorithm = "sha3-256") {
-    if (keyLength < 256) {
-      throw new Error("The key length should be at least 256 bits.");
-    }
-
-    this.keyLength = keyLength;
-    this.algorithm = algorithm;
-  }
-
-  generateRandomKey() {
-    const byteLength = Math.ceil(this.keyLength / 8);
-    const buffer = crypto.randomBytes(byteLength);
-    return buffer.toString("hex");
-  }
-
-  calculateHMAC(message, key) {
-    const hmac = crypto.createHmac(this.algorithm, key);
-    hmac.update(message);
-    const hmacHex = hmac.digest("hex");
-    return hmacHex;
-  }
-}
-
-class Game {
+export default class Game {
   main() {
     try {
       const args = process.argv.slice(2);
@@ -149,7 +31,7 @@ class Game {
       const hmac = randomKeyGenerator.calculateHMAC(computerMove, randomKey);
       console.log("HMAC:", hmac);
 
-      const rl = readline.createInterface({
+      const rl = createInterface({
         input: process.stdin,
         output: process.stdout,
       });
@@ -172,7 +54,7 @@ class Game {
             rl.close();
             break;
           case "?":
-            const table = new Table(args, args[0]);
+            const table = new TableP(args, args[0]);
             table.drawTable();
             rl.close();
             break;
@@ -199,6 +81,3 @@ class Game {
     return args.length === [...new Set(args)].length;
   }
 }
-
-const start = new Game();
-start.main();
