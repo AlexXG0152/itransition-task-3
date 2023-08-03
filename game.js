@@ -129,7 +129,13 @@ class Game {
 
       if (args.length < 3) {
         throw new Error(
-          "Invalid number of arguments. Please provide at least 3 moves. \nExample: node game.js Rock Scissors Paper\n"
+          "Invalid number of moves. Please provide at least 3 moves. \nExample: node game.js Rock Scissors Paper\n"
+        );
+      }
+
+      if (!this.checkDuplicates(args)) {
+        throw new Error(
+          "Duplicates moves. Please provide at least 3 different moves. \nExample: node game.js Rock Scissors Paper\n"
         );
       }
 
@@ -187,6 +193,10 @@ class Game {
 
   createTextForMenuMoves(args) {
     return args.map((move, index) => `${index + 1} - ${move}`).join("\n");
+  }
+
+  checkDuplicates(args) {
+    return args.length === [...new Set(args)].length;
   }
 }
 
